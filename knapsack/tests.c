@@ -1,12 +1,22 @@
 #include "knapsack.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int main() {
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+static void print_usage(const char *prog) {
+    printf("Usage: %s [--demo]\n", prog);
+    printf("  --demo    Запустить демонстрацию работы алгоритма\n");
+}
+
+static void demo(void) {
     ItemList *list = createItemList(2);
     if (!list) {
         fprintf(stderr, "Ошибка создания списка\n");
-        return 1;
+        return;
     }
 
     addItem(list, 3, 1500, "Ноутбук");
@@ -16,10 +26,10 @@ int main() {
     addItem(list, 10, 500, "Палатка");
     addItem(list, 5, 400, "Спальник");
 
+    int capacity = 50;
+
     printf("=== Исходный список предметов ===\n");
     printItemList(list);
-
-    int capacity = 50;
     printf("\nВместимость рюкзака: %d кг\n", capacity);
 
     printf("\n=== Решение методом табуляции (полная таблица) ===\n");
@@ -32,12 +42,25 @@ int main() {
     }
 
     printf("\n=== Оптимизированная версия (память O(W)) ===\n");
-    int optValue = knapsack01Optimized(list, capacity);
-    if (optValue >= 0)
-        printf("Максимальная стоимость: %d\n", optValue);
+    int opt = knapsack01Optimized(list, capacity);
+    if (opt >= 0)
+        printf("Максимальная стоимость: %d\n", opt);
     else
         printf("Ошибка при вычислении knapsack01Optimized\n");
 
     freeItemList(list);
+}
+
+int main(int argc, char *argv[]) {
+#ifdef _WIN32
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+#endif
+
+    if (argc == 2 && strcmp(argv[1], "--demo") == 0) {
+        demo();
+    } else {
+        print_usage(argv[0]);
+    }
     return 0;
 }

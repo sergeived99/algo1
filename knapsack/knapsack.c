@@ -63,8 +63,7 @@ static int **allocateDPTable(int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
         dp[i] = (int*)malloc(cols * sizeof(int));
         if (!dp[i]) {
-            for (int j = 0; j < i; ++j)
-                free(dp[j]);
+            for (int j = 0; j < i; ++j) free(dp[j]);
             free(dp);
             return NULL;
         }
@@ -74,30 +73,24 @@ static int **allocateDPTable(int rows, int cols) {
 
 static void freeDPTable(int **dp, int rows) {
     if (!dp) return;
-    for (int i = 0; i < rows; ++i)
-        free(dp[i]);
+    for (int i = 0; i < rows; ++i) free(dp[i]);
     free(dp);
 }
 
-static int maxInt(int a, int b) {
-    return (a > b) ? a : b;
-}
 
 void printDPTable(int **dp, int n, int capacity, ItemList *items) {
-    printf("\nТаблица DP (i — предмет, w — вес):\n");
-    printf("i\\w ");
-    for (int w = 0; w <= capacity; ++w)
+    (void)items; // подавление предупреждения
+    printf("\nТаблица DP (i\\w):\n");
+    printf("   ");
+    for (int w = 0; w <= capacity; ++w) {
         printf("%4d", w);
+    }
     printf("\n");
-
     for (int i = 0; i <= n; ++i) {
-        if (i == 0)
-            printf(" 0  ");
-        else
-            printf("%2d %s ", i, items->items[i-1].name); // можно укоротить, если имя длинное
-
-        for (int w = 0; w <= capacity; ++w)
+        printf("%2d ", i);
+        for (int w = 0; w <= capacity; ++w) {
             printf("%4d", dp[i][w]);
+        }
         printf("\n");
     }
 }
@@ -107,7 +100,6 @@ void reconstructSolution(int **dp, ItemList *items, int capacity, int *taken) {
     int w = capacity;
     for (int i = n; i >= 1; --i) {
         if (dp[i][w] != dp[i-1][w]) {
-            // предмет i-1 взят
             taken[i-1] = 1;
             w -= items->items[i-1].weight;
         } else {
@@ -121,17 +113,20 @@ KnapsackResult *knapsack01(ItemList *items, int capacity) {
     int **dp = allocateDPTable(n + 1, capacity + 1);
     if (!dp) return NULL;
 
-    for (int w = 0; w <= capacity; ++w)
-        dp[0][w] = 0;
+    // База
+    for (int w = 0; w <= capacity; ++w) dp[0][w] = 0;
+
+    // Заполнение таблицы
     for (int i = 1; i <= n; ++i) {
         int wi = items->items[i-1].weight;
         int vi = items->items[i-1].value;
         for (int w = 0; w <= capacity; ++w) {
-            dp[i][w] = dp[i-1][w];
+            dp[i][w] = dp[i-1][w];  // не берём
             if (w >= wi) {
                 int candidate = dp[i-1][w - wi] + vi;
-                if (candidate > dp[i][w])
+                if (candidate > dp[i][w]) {
                     dp[i][w] = candidate;
+                }
             }
         }
     }
@@ -141,7 +136,7 @@ KnapsackResult *knapsack01(ItemList *items, int capacity) {
         freeDPTable(dp, n + 1);
         return NULL;
     }
-    res->totalValue = dp[n][capacity];
+
     res->taken = (int*)malloc(n * sizeof(int));
     if (!res->taken) {
         free(res);
@@ -159,6 +154,7 @@ KnapsackResult *knapsack01(ItemList *items, int capacity) {
             ++takenCount;
         }
     }
+    res->totalValue = dp[n][capacity];
     res->totalWeight = totalWeight;
     res->takenCount = takenCount;
 
@@ -176,8 +172,9 @@ int knapsack01Optimized(ItemList *items, int capacity) {
         int vi = items->items[i].value;
         for (int w = capacity; w >= wi; --w) {
             int candidate = dp[w - wi] + vi;
-            if (candidate > dp[w])
+            if (candidate > dp[w]) {
                 dp[w] = candidate;
+            }
         }
     }
 
